@@ -1,0 +1,76 @@
+since: "2024-01-01"          # only keep content on or after this date
+
+apps:                        # Play Store package ids / App Store ids. Run `python run_ingest.py --check` to confirm titles.
+  coin:     {play: com.zerodha.coin,       ios: 1392892554, competitor: false}   # confirmed
+  kite:     {play: com.zerodha.kite3,      ios: 1449453802, competitor: false}   # verify (Coin login goes through Kite)
+  groww:    {play: com.nextbillion.groww,  ios: 1404871703, competitor: true}    # verify
+  indmoney: {play: in.indwealth,           ios: null,       competitor: true}    # verify
+
+playstore:
+  languages: [en, hi]
+  limit_coin: 3000           # reviews per language
+  limit_other: 800
+
+reddit:
+  subreddits: [mutualfunds, MutualfundsIndia, StockMarketIndia, drip_dividend, IndiaInvestments,
+               IndianStockMarket, personalfinanceindia, IndianStreetBets, Zerodha, DalalStreetTalks]
+  queries: ["SIP stopped", "pause SIP", "stop SIP", "SIP failed", "first SIP", "SIP mandate", "Coin SIP",
+            "SIP returns negative", "SIP market fall", "should I continue SIP"]
+  per_query: 40
+  max_comments_per_post: 60
+
+tradingqna:
+  base: https://tradingqna.com
+  categories: ["/c/zerodha/coin-zerodhas-direct-mf-platform/17"]
+  searches: ["SIP failed", "pause SIP", "stop SIP", "SIP mandate", "Coin SIP", "SIP not executed", "first SIP"]
+  max_listing_pages: 40
+  max_topics: 600
+  max_posts_per_topic: 80
+  sleep_seconds: 1.5
+
+youtube:
+  queries: ["SIP for beginners India", "first SIP mutual fund India", "should I stop SIP market fall",
+            "Zerodha Coin SIP", "SIP pause or stop", "SIP returns not good", "mutual fund SIP mistakes beginners"]
+  videos_per_query: 10
+  max_comment_pages: 5       # 100 comments per page
+  # Each search costs 100 API quota units out of a free 10,000/day.
+
+extraction:
+  backend: gemini            # gemini | anthropic | manual | rules   (rules = keyword baseline, no AI)
+  gemini_model: gemini-2.5-flash      # model names change; copy a current one from Google AI Studio
+  anthropic_model: claude-haiku-5-5
+  max_docs: 400
+  per_source_cap: 150        # keeps one big source from dominating
+  temperature: 0.0
+  consistency_temperature: 0.7
+  sleep_seconds: 4           # free-tier rate limits
+  prompt_version: v1
+  manual_batch_size: 15
+
+scoring:
+  top_k: 5
+  min_cell: 30
+  weights: {reach: 0.25, severity: 0.20, proximity: 0.25, addressability: 0.20, evidence: 0.10}
+  sensitivity:
+    - {reach: 0.40, severity: 0.15, proximity: 0.20, addressability: 0.15, evidence: 0.10}
+    - {reach: 0.15, severity: 0.35, proximity: 0.20, addressability: 0.20, evidence: 0.10}
+    - {reach: 0.20, severity: 0.15, proximity: 0.40, addressability: 0.15, evidence: 0.10}
+    - {reach: 0.20, severity: 0.15, proximity: 0.15, addressability: 0.40, evidence: 0.10}
+    - {reach: 0.20, severity: 0.20, proximity: 0.20, addressability: 0.20, evidence: 0.20}
+  # Analyst-set priors per reason code. leak: 1 failed debit, 2 deliberate exit, 3 quiet drift.
+  # proximity = how directly it breaks a successful instalment; addressability = can the product act on it
+  # within the case constraints (no fund advice, no fear/FOMO/urgency). Shown in the app and sensitivity-tested.
+  priors:
+    mandate_or_bank_failure:            {leak: 1, proximity: 95, addressability: 85, label: "Mandate or bank debit fails"}
+    forgot_or_unaware_instalment_failed: {leak: 1, proximity: 95, addressability: 90, label: "Investor unaware an instalment failed"}
+    cash_flow_pressure:                 {leak: 2, proximity: 80, addressability: 70, label: "Cash is tight in a month"}
+    unclear_how_to_pause:               {leak: 2, proximity: 85, addressability: 95, label: "Unclear how to pause or reduce"}
+    poor_returns_vs_expectation:        {leak: 2, proximity: 75, addressability: 80, label: "Returns below expectation"}
+    confusion_about_returns_display:    {leak: 2, proximity: 70, addressability: 90, label: "Confused by how returns are shown"}
+    market_drop_anxiety:                {leak: 2, proximity: 50, addressability: 40, label: "Anxiety when markets fall"}
+    influencer_advised_stop:            {leak: 2, proximity: 60, addressability: 50, label: "Someone advised stopping"}
+    lost_trust:                         {leak: 2, proximity: 70, addressability: 60, label: "Lost trust in the platform"}
+    job_or_income_loss:                 {leak: 2, proximity: 80, addressability: 40, label: "Job or income loss"}
+    shifted_to_other_goal:              {leak: 2, proximity: 60, addressability: 50, label: "Money moved to another goal"}
+    switched_platform:                  {leak: 2, proximity: 50, addressability: 40, label: "Switched to another platform"}
+    other:                              {leak: 2, proximity: 40, addressability: 40, label: "Other reasons"}

@@ -1,0 +1,6 @@
+# Only needed on your own computer to collect data. Streamlit Cloud uses requirements.txt.
+requests>=2.31
+pandas>=2.0
+pyyaml>=6.0
+google-play-scraper>=1.2.7
+praw>=7.7        # optional, only if you already hold approved Reddit API credentials
