@@ -1,0 +1,4 @@
+source,source_type,channel,title,text,date,url,author,rating,upvotes,parent_id
+reddit,comment,r/mutualfunds,EXAMPLE thread title,EXAMPLE: paste one comment per row here,2026-09-14,https://reddit.com/r/example/comments/abc123,username,,12,
+x,post,,,EXAMPLE: paste one post per row here,2026-10-02,https://x.com/example/status/1,handle,,3,
+survey,primary,google-form,,EXAMPLE: paste one survey free-text answer per row,2026-10-26,,,,,
